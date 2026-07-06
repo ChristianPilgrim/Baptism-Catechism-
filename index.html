@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning Baptism</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Source+Serif+4:opsz,wght@8..60,400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --ink: #171F30;
+  --ink-line: #313f5c;
+  --parchment: #F3EEDF;
+  --parchment-ink: #251D13;
+  --parchment-soft: #E7DFC9;
+  --brass: #C39A5C;
+  --brass-deep: #93702F;
+  --rose: #C06A4D;
+  --rose-soft: #3A2A28;
+  --sage: #8CA582;
+  --sage-soft: #26332A;
+  --muted: #93A0B8;
+}
+
+*{box-sizing:border-box;}
+
+html{
+  background:#EAE3CD;
+  min-height:100%;
+}
+
+body{
+  margin:0;
+  background:#EAE3CD;
+  color:var(--parchment-ink);
+  font-family:'Source Serif 4', serif;
+  min-height:100vh;
+  min-height:100dvh;
+  display:flex;
+  justify-content:center;
+  padding:32px 16px 64px;
+}
+
+.wrap{ width:100%; max-width:620px; }
+
+.eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--brass);
+  margin-bottom:8px;
+}
+
+h1{
+  font-family:'Fraunces', serif;
+  font-weight:700;
+  font-size:clamp(28px,6vw,38px);
+  margin:0 0 6px;
+  letter-spacing:-0.01em;
+  color:var(--parchment-ink);
+}
+
+.subtitle{ color:#6B5A3E; font-size:16.5px; margin:0 0 28px; line-height:1.55; }
+
+.thread{ display:flex; align-items:center; margin-bottom:32px; overflow-x:auto; padding-bottom:4px; }
+.node-wrap{ display:flex; align-items:center; flex-shrink:0; }
+.node{ width:10px; height:10px; border-radius:50%; background:#D8CEAE; border:1.5px solid #C9BC90; flex-shrink:0; transition:background .4s, border-color .4s, transform .4s; }
+.node.done{ background:var(--brass-deep); border-color:var(--brass-deep); }
+.node.current{ border-color:var(--brass-deep); transform:scale(1.35); animation:pulse 1.8s ease-in-out infinite; }
+.link{ width:18px; height:1.5px; background:#C9BC90; flex-shrink:0; transition:background .4s; }
+.link.done{ background:var(--brass-deep); }
+@keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(195,154,92,0.5);} 50%{ box-shadow:0 0 0 5px rgba(195,154,92,0);} }
+
+.section-label{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.section-title{ font-family:'Fraunces', serif; font-weight:600; font-size:20px; color:var(--brass-deep); margin:0 0 18px; }
+
+.card{
+  background:var(--parchment);
+  color:var(--parchment-ink);
+  border-radius:6px;
+  padding:30px 26px;
+  box-shadow:0 18px 40px rgba(0,0,0,0.35);
+  animation:rise .5s ease;
+}
+@keyframes rise{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:translateY(0);} }
+
+.qnum{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; color:var(--brass-deep); margin-bottom:8px; }
+.prompt{ font-family:'Fraunces', serif; font-weight:500; font-size:21px; line-height:1.5; margin:0 0 20px; }
+
+.options{ display:flex; flex-direction:column; gap:10px; }
+
+.opt-block{ display:flex; flex-direction:column; }
+
+.opt{
+  text-align:left;
+  background:var(--parchment-soft);
+  border:1px solid rgba(37,29,19,0.15);
+  border-radius:4px;
+  padding:14px 16px;
+  font-family:'Source Serif 4', serif;
+  font-size:17px;
+  line-height:1.45;
+  color:var(--parchment-ink);
+  cursor:pointer;
+  transition:background .2s, border-color .2s, opacity .2s;
+}
+.opt:hover{ background:#DED2AE; border-color:var(--brass-deep); }
+.opt:focus-visible{ outline:2px solid var(--brass-deep); outline-offset:2px; }
+.opt .letter{ font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--brass-deep); margin-right:10px; }
+
+.opt.wrong-chosen{ background:var(--rose-soft); color:#F1D9CE; border-color:var(--rose); cursor:default; }
+.opt.wrong-chosen .letter{ color:#F1D9CE; }
+.opt.correct-chosen{ background:var(--sage-soft); color:#DCE8D6; border-color:var(--sage); cursor:default; }
+.opt.correct-chosen .letter{ color:#DCE8D6; }
+.opt.disabled-other{ opacity:.45; pointer-events:none; }
+
+.inline-correction{
+  margin-top:8px;
+  padding:14px 16px;
+  border-radius:4px;
+  background:#221A17;
+  color:#E9D9CC;
+  font-size:16px;
+  line-height:1.6;
+  border-left:3px solid var(--rose);
+  animation:rise .3s ease;
+}
+.inline-correction .chosen-quote{ display:block; font-style:italic; color:var(--rose); margin-bottom:6px; }
+
+.affirmation{
+  margin-top:16px;
+  padding:15px 17px;
+  border-radius:4px;
+  background:var(--sage-soft);
+  color:#DCE8D6;
+  font-size:16px;
+  line-height:1.6;
+  border-left:3px solid var(--sage);
+  animation:rise .35s ease;
+}
+
+.continue-btn{
+  margin-top:18px;
+  background:var(--brass-deep);
+  color:#F3EEDF;
+  border:none;
+  border-radius:4px;
+  padding:11px 20px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12.5px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:background .2s;
+  display:inline-block;
+}
+.continue-btn:hover{ background:#7A5A26; }
+
+.takeaway-card{ text-align:left; }
+.takeaway-label{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--sage); margin-bottom:14px; display:block; }
+.takeaway-text{ font-family:'Fraunces', serif; font-weight:500; font-size:20px; line-height:1.55; margin:0 0 20px; }
+.leading-q{
+  font-size:17px;
+  line-height:1.6;
+  font-style:italic;
+  color:#5A4A34;
+  border-top:1px solid rgba(37,29,19,0.15);
+  padding-top:16px;
+  margin:0 0 4px;
+}
+
+.landing-card{ text-align:left; }
+.landing-title{ font-family:'Fraunces', serif; font-weight:600; font-size:24px; margin:0 0 16px; }
+.landing-body{ font-size:17px; line-height:1.7; color:#4b3d28; margin:0 0 22px; }
+
+.done-screen{ text-align:center; padding:10px 0 4px; }
+.done-screen .mark{ width:44px;height:44px;border-radius:50%;border:2px solid var(--brass-deep);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-family:'Fraunces',serif;font-size:20px;color:var(--brass-deep); }
+.next-note{ margin-top:22px; color:#6B5A3E; font-size:13px; line-height:1.6; text-align:center; }
+
+@media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">CRCC Studies</div>
+  <h1>Learning Baptism</h1>
+  <p class="subtitle" id="subtitle">Baptism is one of those words everyone's heard, but few can explain simply. We'll build up to it slowly, one honest question at a time.</p>
+
+  <div class="thread" id="thread"></div>
+  <div id="app"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    section: "PART ONE", sectionTitle: "The Wedding Ring",
+    prompt: "A wedding ring sits on someone's finger. Which answer best describes what the ring does?",
+    options: [
+      { text: "The ring is the thing that legally and actually makes the two people married", correct:false,
+        correction:"if a ring is lost, are the two people suddenly not married anymore? If a stranger buys the exact same ring, are they now married to whoever gave it to them? The ring didn't make the marriage. Something else did." },
+      { text: "The ring is just decoration with no real connection to the marriage at all", correct:false,
+        correction:"the ring isn't a random accessory. It was chosen and given specifically because of the marriage. It does mean something real — it's just not the marriage itself." },
+      { text: "The ring shows that a marriage is real, but the marriage itself would still be true even without the ring", correct:true,
+        affirmation:"That's right." },
+      { text: "The ring and the marriage are basically the same thing, just described two ways", correct:false,
+        correction:"if you melted the ring down, would the marriage disappear? If it's the same thing, destroying one should destroy the other. But it doesn't." }
+    ],
+    takeaway:"The ring doesn't create the marriage. It shows a marriage that already exists. Even with no ring at all, two people can still be truly married.",
+    leadingQ:"So if a sign can be destroyed without hurting the reality it points to — what does that actually tell us about which one depends on the other?"
+  },
+  {
+    section: "PART ONE", sectionTitle: "The Wedding Ring",
+    prompt: "If that ring is completely destroyed — melted down, gone forever — what happens to the marriage itself?",
+    options: [
+      { text: "The marriage stays completely the same — nothing about it changes", correct:true,
+        affirmation:"That's right." },
+      { text: "The marriage is destroyed too, since they were connected", correct:false,
+        correction:"where does a marriage actually live — in a piece of metal, or in the promises two people made to each other? If it's the promises, melting a ring can't touch that." },
+      { text: "The marriage gets weaker, even if it's not fully destroyed", correct:false,
+        correction:"if someone lost their ring on a beach, would you say their marriage got a little bit weaker that day? Most people would say no — they'd probably just be upset about losing the ring, and buy a new one. The marriage wouldn't change at all." },
+      { text: "It depends on how expensive the ring was", correct:false,
+        correction:"try it both ways — a cheap ring and an expensive ring. Does either one being destroyed change whether two people are married? The price was never the point." }
+    ],
+    takeaway:"The marriage doesn't live inside the ring, so losing the ring can't touch it. The ring was only ever pointing to something real — it was never the thing itself.",
+    leadingQ:"If the sign can disappear and the reality stays untouched... which one is actually in charge here?"
+  },
+  {
+    section: "PART ONE", sectionTitle: "The Wedding Ring",
+    prompt: "So the ring can be destroyed and the marriage stays exactly the same. What does that tell us about which one depends on the other?",
+    options: [
+      { text: "The ring is what keeps the marriage alive, so the marriage depends on the ring", correct:false,
+        correction:"we just said destroying the ring didn't touch the marriage at all. If the marriage depended on the ring, losing the ring should have ended it. It didn't." },
+      { text: "They depend on each other equally", correct:false,
+        correction:"if that were true, hurting one should always hurt the other. But destroying the ring left the marriage completely untouched. That's not an equal, two-way relationship — it only runs one way." },
+      { text: "There's no real link between them — it's random", correct:false,
+        correction:"if it were random, any object would do just as well — a spoon, a rock, or a shoelace. But the ring was chosen specifically because of the marriage. That's not random. It's just one-directional." },
+      { text: "The marriage is real on its own, and the ring just points to it — so the ring depends on the marriage, not the other way around", correct:true,
+        affirmation:"That's right." }
+    ],
+    takeaway:"The marriage doesn't need the ring to be true. But the ring only makes sense because of the marriage — without the marriage, the ring would just be a random piece of metal. The ring depends on the marriage, not the other way round.",
+    leadingQ:"So could a real marriage exist with no sign at all — no ring, no ceremony, nothing you could point to?"
+  },
+  {
+    section: "PART ONE", sectionTitle: "The Wedding Ring",
+    prompt: "Could two people really be married with no ring at all, no ceremony, nothing you could point to and see?",
+    options: [
+      { text: "Yes — a sign is nice to have, but the marriage can be real without it", correct:true,
+        affirmation:"That's right." },
+      { text: "No — without some kind of visible sign, there's no way the marriage could actually be real", correct:false,
+        correction:"picture two people who say their vows in front of witnesses, but exchange no rings at all — no jewelry, nothing physical. Are they married? Most people would say yes. So it isn't the object that makes it real — some kind of promise does." },
+      { text: "A marriage specifically needs a ring, or it doesn't count", correct:false,
+        correction:"plenty of real marriages happen with no rings exchanged at all — some cultures use other signs entirely, or none. If a ring were required, all of those marriages would have to be fake, which doesn't make sense." }
+    ],
+    takeaway:"Signs are the normal, natural way people show a real commitment. But the sign itself isn't what makes the commitment true — it simply shows that commitment publicly. The commitment could exist without any sign at all.",
+    leadingQ:"Is every sign like this — just a display case for something already finished? Or could there be a sign that actually does something more?"
+  },
+  {
+    section: "PART TWO", sectionTitle: "The Wax Seal",
+    prompt: "A king writes an official letter and presses his ring into hot wax to seal it. Without that seal, the letter isn't recognized as valid or official by anyone who receives it. Does this seal work exactly the same way as the wedding ring, or differently?",
+    options: [
+      { text: "Exactly the same — the seal is just decoration, the letter would be just as official without it", correct:false,
+        correction:"we said the seal is required for the letter to be recognized as valid. That's different from the wedding ring, where the marriage was real with or without it. Here, no seal actually means no valid letter, as far as anyone receiving it is concerned." },
+      { text: "Different — the seal doesn't create the king's authority, but it's the actual tool (the means — the thing something is done through) by which that authority gets attached to this letter. No seal, no valid letter — even though the wax itself has no power of its own", correct:true,
+        affirmation:"That's right." },
+      { text: "The wax itself has real power — it's the wax that makes the letter official", correct:false,
+        correction:"melt some wax onto a letter from a random stranger, and it still means nothing. The wax has no power on its own. What makes it work is that the king has attached his real authority to it." },
+      { text: "Different — the seal just records something that already happened somewhere else, so it doesn't really need to be there", correct:false,
+        correction:"we said this letter isn't recognized as valid without the seal. If it were just a record of something already finished elsewhere, missing it wouldn't matter. But it does matter here — that's exactly what makes this different from the ring." }
+    ],
+    takeaway:"So a sign can work two ways: some signs (like the ring) point to something already true elsewhere. Other signs (like the seal) are the actual tool through which something real is delivered to someone — even though the sign itself has no power on its own. Keep both of these in mind. Baptism, as we'll see, works more like the second one.",
+    leadingQ:"If a sign can be a real tool and still have no power of its own — what happens if someone's handed that tool but never actually uses it?"
+  },
+  {
+    section: "PART TWO", sectionTitle: "The Gift Card",
+    prompt: "Imagine someone hands you a gift card that's genuinely loaded with money — it really does have value on it, no trick. You put it in a drawer and never use it. Do you actually get that value?",
+    options: [
+      { text: "Yes — once you're holding a real, loaded gift card, the value is already yours, whether you do anything with it or not", correct:false,
+        correction:"try using it to actually buy something without ever taking it out of the drawer. It won't work. The value is real and waiting, but it hasn't actually reached you yet — because you haven't taken the one step needed to receive it." },
+      { text: "No — because the card was probably fake or empty", correct:false,
+        correction:"we said the card is genuinely loaded with real value. The problem in this question isn't whether the sign is real — it is. The question is whether just holding a real sign is the same as receiving what it points to." },
+      { text: "It doesn't matter either way — holding the card and using it are the same thing", correct:false,
+        correction:"if that were true, you could pay for something by just showing someone the card in your pocket. Try it. Holding it and actually using it to receive its value are two different things." },
+      { text: "No — the card is genuine and the value is real, but you don't actually have it until you use it and receive what it offers", correct:true,
+        affirmation:"That's right." }
+    ],
+    takeaway:"Even a completely genuine sign doesn't automatically give its benefits to everyone who just holds it. Two people can receive the exact same sign — and only one of them actually receives what it was offering. The gift still has to be received. Hold onto that. It's the last piece we need before baptism itself.",
+    leadingQ:"So what is that \u201csomething\u201d that has to happen on the receiving end — and what does the Bible actually say does that for baptism?"
+  },
+  {
+    section: "PART THREE", sectionTitle: "Why We Need Saving",
+    prompt: "The Bible says every single person has \u201csinned\u201d — meaning they've failed to live the way God created them to live: disobeying Him, putting themselves first, doing wrong things (or failing to do the right ones). Does that describe every person who has ever lived, or just the really bad ones?",
+    options: [
+      { text: "Every single person, without exception — including people who seem good", correct:true,
+        affirmation:"That's right." },
+      { text: "Only especially bad people — most ordinary people are basically fine", correct:false,
+        correction:"try drawing the actual line. Is it lying? Being unkind once a week? Once a year? Notice how people often draw that line just below themselves — a person who gossips points to someone who steals, and someone who steals points to someone who's violent. The line keeps moving depending on who's holding the pen. Now ask yourself honestly: have you ever lied, been selfish, or put yourself first when you shouldn't have — even a few times in your whole life? If yes, by that same standard, it includes you too." },
+      { text: "\u201cSin\u201d isn't a real thing — it's just an old religious idea", correct:false,
+        correction:"forget the word for a second. Has every person you've ever known — including you — lied, acted selfishly, or hurt someone unfairly at some point? If that's true of literally everyone, the pattern is real, whatever word you use for it. \u201cSin\u201d is just the Bible's name for exactly that." },
+      { text: "Only people who don't believe in God are sinners", correct:false,
+        correction:"think of the kindest atheist you know, and the most devoted believer you know. Has either one ever lied, or been unfairly angry, or put themselves first? Believing or not believing in God doesn't change whether a person has actually fallen short — that's a separate question entirely." }
+    ],
+    takeaway:"The Bible says this in the plainest possible terms: \u201cfor all have sinned and fall short of the glory of God\u201d (Romans 3:23) — and earlier in that same passage, \u201cThere is none righteous, not even one\u201d (Romans 3:10). Not \u201cmost people.\u201d Not \u201cthe bad ones.\u201d Every single person, without exception. This isn't about comparing people to each other — some people really are kinder than others. It's about comparing every person to God's own standard of perfect goodness. No one meets that standard by themselves.",
+    leadingQ:"If literally everyone falls short of that standard — including the people we think of as \u201cgood\u201d — what does that actually mean for our relationship with God?"
+  },
+  {
+    section: "PART THREE", sectionTitle: "Why We Need Saving",
+    prompt: "If every person falls short of God's perfect standard, what does the Bible say that actually does to our relationship with Him?",
+    options: [
+      { text: "Nothing much — God overlooks it as long as we're generally trying our best", correct:false,
+        correction:"think about a judge in a courtroom who says \u201cwell, the evidence is clear, but this person seemed to be trying, so we'll let it go.\u201d We wouldn't call that judge good — we'd call him careless with justice. The Bible describes God as perfectly good and perfectly just, not someone who quietly lowers the standard because effort was made." },
+      { text: "It only affects our relationship with other people, not with God at all", correct:false,
+        correction:"think about the definition we used in the last question — sin isn't just \u201churting other people,\u201d it's falling short of what God Himself made us for. If it's about what God made us for, it's God we've fallen short of first, whether or not anyone else is even affected." },
+      { text: "It creates a real separation between us and God, and Scripture describes the consequence of it as death", correct:true,
+        affirmation:"That's right." },
+      { text: "It's a problem, but one we can fix ourselves through enough good behavior over time", correct:false,
+        correction:"if the standard is perfect goodness (which is what we established last question), then doing ten good deeds afterward doesn't undo the sin you already committed — the same way adding good actions can't erase what's already been done." }
+    ],
+    takeaway:"Romans 6:23 puts it plainly: \u201cFor the wages of sin is death, but the free gift of God is eternal life in Christ Jesus our Lord.\u201d Not a slap on the wrist — a genuine, serious separation from God, described in the strongest possible terms. Sin isn't a small mistake God quietly forgets about. It creates a real separation between us and Him.",
+    leadingQ:"If we can't fix this ourselves, and the consequence is this serious — is there anyone who actually can?"
+  },
+  {
+    section: "PART THREE", sectionTitle: "Why We Need Saving",
+    prompt: "We've established that no one can fix this problem through their own good behavior — the standard is perfection, and nobody meets it. So is the problem actually hopeless, or does the Bible say someone else can deal with it?",
+    options: [
+      { text: "It's hopeless — there's nothing anyone can do about it", correct:false,
+        correction:"the whole reason the rest of the Bible exists is that God Himself doesn't leave it there. The problem is real and serious, but the Bible's entire message is built around someone stepping in to deal with it — not around leaving people stuck." },
+      { text: "Jesus mainly came to give good moral teaching and set an example to follow", correct:false,
+        correction:"good teaching alone can't undo something already done. If you already broke ten windows, being told how to avoid breaking windows in the future doesn't fix the ones that are already broken. The problem we identified isn't a knowledge gap — it's a debt already owed. Teaching alone can't pay a debt." },
+      { text: "Every religion basically has its own version of a solution, and they all work equally well", correct:false,
+        correction:"this is a bigger question than we can settle in one line here — but for now, notice that Christianity's specific claim isn't \u201ctry harder\u201d or \u201cfollow more rules.\u201d It's that someone else already paid the actual debt, in full, on your behalf. Whether that claim is true is exactly what we're walking through — so let's stay with what the Bible itself actually says before comparing it to anything else." },
+      { text: "God sent His own Son, Jesus, to actually take the punishment in our place", correct:true,
+        affirmation:"That's right." }
+    ],
+    takeaway:"This is the very center of the whole Christian message: \u201cBut God demonstrates His own love toward us, in that while we were still sinners, Christ died for us\u201d (Romans 5:8). Jesus didn't just teach people how to be better — He took the penalty our sins deserve, in place of the people who deserved it. God didn't lower the standard or overlook the debt. He sent His own Son to actually pay it, in full.",
+    leadingQ:"But why would God do this at all, for people who don't deserve it? What does the Bible actually call this?"
+  },
+  {
+    section: "PART THREE", sectionTitle: "Why We Need Saving",
+    prompt: "We've said God sent His Son to take the punishment sin deserved. But why would God do that for people who don't deserve it? What does the Bible call this?",
+    options: [
+      { text: "God does this because people generally try their best, and He rewards good effort", correct:false,
+        correction:"remember the earlier questions on sin and its cost — every person falls short, and no amount of good effort pays a debt already owed. If God were simply rewarding effort, this would contradict everything already established about the actual size of the problem." },
+      { text: "This is what the Bible calls grace — God's free, undeserved kindness toward people who did nothing to earn it and deserved the opposite", correct:true,
+        affirmation:"That's right." },
+      { text: "God does this because, on balance, people are mostly good, so a little help is all that's needed", correct:false,
+        correction:"this is the exact position already ruled out earlier — Scripture says no one is righteous, not \u201cmost people are pretty good.\u201d God isn't topping up an already-decent situation; He's rescuing people who had nothing to offer." },
+      { text: "This is simply fairness — everyone gets the same chance, so it evens out in the end", correct:false,
+        correction:"fairness would actually mean everyone receiving exactly what they've earned — which, as we've already seen, is death. What God gives instead is the opposite of fairness in the ordinary sense; it's kindness given to people who, by fairness alone, would receive judgment." }
+    ],
+    takeaway:"Remember the gift card from earlier — the value on it was never something you worked for or paid into yourself; it was simply given. That's exactly the shape of grace: God's free, undeserved kindness, given to people who deserved the opposite. Paul writes: \u201cFor by grace you have been saved through faith, and that not of yourselves; it is the gift of God, not of works, lest anyone should boast\u201d (Ephesians 2:8\u20139). Nothing about salvation is earned, topped up, or balanced out by effort — it's a gift, from beginning to end. This matters for how we understand baptism too. Classical Reformed theology calls baptism a means of grace — not something we do to earn or add to what God gives, but one of the ordinary means by which God continues to strengthen, confirm, and communicate His grace to His people. In baptism, God is the primary actor. We are the ones who receive.",
+    leadingQ:"If salvation is entirely a gift of grace — where does baptism fit into that? Is baptism something we do to earn or add to grace, or something else entirely?"
+  },
+  {
+    section: "PART THREE", sectionTitle: "Why We Need Saving",
+    prompt: "Jesus died on the cross, paying the debt our sin deserved. Does the story stop there, or does the Bible say something else happened afterward that matters just as much?",
+    options: [
+      { text: "It stops there — the death itself was the whole point, and nothing after that really matters", correct:false,
+        correction:"Paul actually says the opposite directly: \u201cAnd if Christ is not risen, your faith is futile; you are still in your sins!\u201d (1 Corinthians 15:17). If the resurrection didn't matter, Paul wouldn't have said the whole faith collapses without it." },
+      { text: "Jesus rose from the dead — and that resurrection is treated as just as essential as the death itself", correct:true,
+        affirmation:"That's right." },
+      { text: "The resurrection is a nice extra detail, but it's mainly symbolic, not something that actually happened", correct:false,
+        correction:"the New Testament writers treat it as a real, physical event with eyewitnesses (1 Corinthians 15:3\u20138 lists over 500 people who saw Him). It's presented as something that happened in history — not a metaphor added on afterward." },
+      { text: "Only the disciples benefited from the resurrection — it doesn't really apply to anyone else today", correct:false,
+        correction:"Paul writes to ordinary believers, not just eyewitnesses, and tells them the resurrection is the very thing their own faith stands or falls on (1 Corinthians 15:17, again). It's written as something every believer's own hope depends on — not a private event for a few people 2,000 years ago." }
+    ],
+    takeaway:"\u201cHe who was delivered over because of our transgressions, and was raised because of our justification\u201d (Romans 4:25). The cross paid the debt. The resurrection showed that it had truly been paid — that death itself had been beaten, not just endured.",
+    leadingQ:"If Jesus really died and rose again — is there any way for that to become more than just something we admire from a distance? Could a person actually be joined to it?"
+  },
+  {
+    section: "PART FOUR", sectionTitle: "Joined to Christ",
+    prompt: "We've said Jesus really died and really rose again. But that happened to Him, 2,000 years ago. What does the Bible say has to happen for that to actually reach and count for you personally?",
+    options: [
+      { text: "Nothing needs to happen — since Jesus died for everyone, everyone is automatically saved whether they respond or not", correct:false,
+        correction:"remember the gift card. The value was completely real and genuinely available — but the person who left it in the drawer never actually had it. A real, genuine offer still has to be received. The Bible is full of instructions to believe, repent, and receive — which wouldn't make sense if nothing needed to happen on the receiving end." },
+      { text: "You are united to Christ by the Holy Spirit, through faith — trusting Him personally — so that His death and resurrection genuinely become yours", correct:true,
+        affirmation:"That's right." },
+      { text: "Only the original disciples who actually knew Jesus in person could be joined to Him", correct:false,
+        correction:"Paul himself never met Jesus in the flesh before His death and resurrection, yet Paul writes more about being \u201cin Christ\u201d than almost anyone else in Scripture. This union isn't about having physically known Him — it's about trusting Him." },
+      { text: "You're joined to Christ by being born into a Christian family or culture", correct:false,
+        correction:"a person can grow up in a Christian home, go to church every week, and still never personally trust Christ — just like a person could grow up in a family of musicians and never actually learn to play. Being around something and being joined to it aren't the same thing." }
+    ],
+    takeaway:"This is called being \u201cin Christ\u201d — one of the most repeated phrases in the whole New Testament. Galatians 2:20 says: \u201cI have been crucified with Christ; it is no longer I who live, but Christ lives in me...\u201d It's the Holy Spirit who joins us to Christ; faith is how we receive Him — the way the gift card actually gets used, so that what Christ did 2,000 years ago truly becomes yours.",
+    leadingQ:"If it's through faith that a person is joined to Christ — where does baptism fit into all of this? Does baptism itself create that union, or does it do something else?"
+  },
+  {
+    section: "PART FOUR", sectionTitle: "Joined to Christ",
+    prompt: "Given everything we've built — the ring, the seal, the gift card, and faith joining us to Christ — what best describes what baptism actually is?",
+    options: [
+      { text: "Baptism is the act of being placed under the water and brought back up, which by itself is what joins a person to Christ", correct:false,
+        correction:"remember the ring. If the water itself did the joining, then anyone who's ever been baptized — regardless of faith, regardless of what's true in their heart — would automatically be united to Christ. But we already established that union comes through faith, not through an object or action alone. This is the same mistake as saying the ring itself makes the marriage." },
+      { text: "Baptism is just an old religious custom — a nice tradition, but with no real spiritual weight of its own", correct:false,
+        correction:"remember the wax seal. The seal wasn't nothing — it was the actual, appointed tool through which the king's authority reached and applied to that specific letter. Baptism isn't a bare custom either; it's something God Himself specifically instituted and attached real significance to. Calling it \u201cjust tradition\u201d throws away what the seal already taught us." },
+      { text: "Since faith alone joins a person to Christ, baptism doesn't really matter one way or the other", correct:false,
+        correction:"it's true that union comes through faith, not through water — but that doesn't make baptism unimportant. The wax seal wasn't what created the king's authority either — yet leaving it off still mattered enormously, because it was the appointed means by which that authority was actually confirmed and delivered. Baptism can be genuinely important without being the thing that creates the union." },
+      { text: "Baptism is God's sign and seal of His covenant promise in Christ — a promise believers receive and enjoy through faith", correct:true,
+        affirmation:"That's right." }
+    ],
+    takeaway:"Baptism doesn't create our union with Christ — the Holy Spirit does that, joining us to Him through faith. But baptism isn't just decoration either. Like the wax seal, it's the specific tool God has appointed to signify, confirm, and seal His covenant promise in Christ. This is exactly why Peter can say baptism \u201cnow saves us\u201d (1 Peter 3:21) in the very same breath as denying it's about \u201cthe removal of the filth of the flesh\u201d — because God has truly joined this sign to the saving reality it signifies and seals by His promise, not because the water itself has saving power. This is exactly why baptism is called a means of grace rather than a good work — the difference matters. A work is something a person does for God. A means of grace is something God does for a person. Baptism isn't the only means of grace — the preached Word is another — but in both, God is the one acting; we are simply the ones who receive what He gives.",
+    leadingQ:"If Christ Himself appointed this sign — did He also specify exactly how it should be done, and why that matters?"
+  },
+  {
+    section: "PART FOUR", sectionTitle: "Joined to Christ",
+    prompt: "Right before Jesus returned to heaven, He gave His followers this clear command: \u201cGo therefore and make disciples of all the nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit\u201d (Matthew 28:19). Why does it matter that Jesus specified this particular form — \u201cin the name of the Father, Son, and Holy Spirit\u201d — rather than just saying \u201cgo and baptize people\u201d?",
+    options: [
+      { text: "It doesn't really matter what words are used — any form of water ritual done sincerely would satisfy this command", correct:false,
+        correction:"Jesus was specific for a reason. This is the very moment He institutes the sacrament — the actual founding instruction for how His church is to do this, for all time. Skipping over His specific words treats baptism as something the church invented and can define however it likes, rather than something Christ Himself commanded and shaped." },
+      { text: "This shows baptism is meant to be done in the name of one specific person, \u201cJesus,\u201d and mentioning the Father and Spirit is just poetic extra language", correct:false,
+        correction:"Jesus uses one singular word — \u201cname\u201d — not \u201cnames,\u201d while naming three distinct persons: Father, Son, and Holy Spirit. That's a deliberate, careful way of saying these three are one God, three persons, sharing the one name and authority into which someone is baptized. It's not decoration; it's the doctrine of the Trinity built directly into the sacrament itself." },
+      { text: "Being baptized \u201cin the name of the Father, Son, and Holy Spirit\u201d places a person under the ownership and authority of the one true God — Father, Son, and Holy Spirit together — and marks them publicly as belonging to His covenant people", correct:true,
+        affirmation:"That's right." },
+      { text: "This verse is really about making disciples through teaching, and the baptism part is just a minor detail added on afterward", correct:false,
+        correction:"look at the actual grammar of Jesus's command — baptizing and teaching are given together, side by side, as the two ways disciples are actually made. Baptism isn't an afterthought tacked onto teaching; Jesus places it right at the center of how His church is to bring people into following Him." }
+    ],
+    takeaway:"Classical Continental Reformed churches take Christ's own words in Matthew 28:19 with full seriousness — baptism isn't a tradition the church invented or a ritual anyone can define however they like. Christ Himself instituted it, specified its Trinitarian form, and commanded His church to keep doing it until the end of the age. This is why the Belgic Confession (Article 34) and Heidelberg Catechism both insist baptism must be administered exactly \u201cin the name of the Father, the Son, and the Holy Spirit\u201d — because the form itself was never negotiable; it was given directly by Christ.",
+    leadingQ:"If Christ Himself commanded baptism in this specific, Trinitarian form — what does that tell us about who baptism ultimately belongs to, and who it's really from? And what exactly does Scripture say it's sealing us into? What does Romans 6 say actually happens to us \u201cin\u201d baptism?"
+  },
+  {
+    section: "PART FOUR", sectionTitle: "Joined to Christ",
+    prompt: "Paul writes: \u201cOr do you not know that as many of us as were baptized into Christ Jesus were baptized into His death? Therefore we were buried with Him through baptism into death, that just as Christ was raised from the dead by the glory of the Father, even so we also should walk in newness of life\u201d (Romans 6:3\u20134). Given everything we've learned so far, what's the best way to understand this?",
+    options: [
+      { text: "This means the physical water itself somehow contains healing or spiritual power that transfers into the person", correct:false,
+        correction:"this is the exact mistake we already ruled out. We established that baptism doesn't create union with Christ — faith does, and baptism signifies and seals God's covenant promise concerning that union. The water isn't a magic substance; it's the appointed sign of a promise that's received through faith." },
+      { text: "Paul is speaking about baptism the way the whole Bible speaks about signs — describing the sign in the language of the reality it's joined to, the same way Peter could say \u201cbaptism now saves us\u201d without meaning the water itself does the saving", correct:true,
+        affirmation:"That's right." },
+      { text: "This verse has nothing to do with real, actual death and resurrection — it's just a poetic metaphor with no substance behind it", correct:false,
+        correction:"Paul isn't being vague here. He's describing something with real consequences — the next verse goes on to say this is why believers should \u201cwalk in newness of life.\u201d If it were empty poetry, Paul couldn't build a real command for daily living on top of it." },
+      { text: "Only people who were literally present at Jesus's original death and resurrection are being described here", correct:false,
+        correction:"Paul is writing this letter to ordinary Roman believers, decades after the resurrection, none of whom were there. He's telling them this is true of them, right now, through their own union with Christ by faith — not describing a historical eyewitness event." }
+    ],
+    takeaway:"This is the same pattern we saw with the wax seal and the gift card — a genuine sign spoken of in the language of what it represents and delivers. Paul isn't saying the water performs a spiritual surgery — he's not attributing this union to the water itself, but to Christ, whose death and resurrection God truly signifies and seals to us in baptism. His death has become ours, and His resurrection life is now ours too — sealed to us in the sign, and received by faith.",
+    leadingQ:"If baptism seals dying with Christ and rising to new life — what happens to sins that are already forgiven through this? Is that what Peter meant by \u201cthe washing away of sins\u201d?"
+  },
+  {
+    section: "PART FOUR", sectionTitle: "Joined to Christ",
+    prompt: "In Acts 22:16, Ananias tells Saul: \u201cArise and be baptized, and wash away your sins, calling on the name of the Lord.\u201d Given everything we've built — is this saying the water itself removes sin, or something else?",
+    options: [
+      { text: "Yes — this verse proves the water itself washes sin away, no faith required", correct:false,
+        correction:"look at the end of the same sentence — \u201ccalling on the name of the Lord.\u201d Ananias links the washing directly to calling on the Lord, not to the water by itself. And this is the very same Saul who, three days earlier on the Damascus road, had already met the risen Christ and believed. The washing is spoken of alongside calling on Christ, not instead of it." },
+      { text: "This verse contradicts what we've already learned, and one of these passages must be wrong", correct:false,
+        correction:"we've already seen this same pattern more than once — Peter calling baptism itself \u201csaving\u201d while explicitly denying the water does the saving, Paul describing baptism as death and resurrection while meaning something sealed by faith. This isn't a new contradiction; it's the same pattern of speech showing up again." },
+      { text: "This is the same pattern we've already seen — a genuine sign spoken of in the language of the reality it seals, not describing the water as having power on its own", correct:true,
+        affirmation:"That's right." },
+      { text: "This verse is only about physical cleanliness, nothing spiritual at all", correct:false,
+        correction:"Saul had just spent three days blind, fasting, and praying after meeting the risen Christ (Acts 9:9\u201311) — this moment is clearly about his soul, not his hygiene. \u201cWash away your sins\u201d is describing something far bigger than a physical bath." }
+    ],
+    takeaway:"This is the same pattern we've now seen three times over — Peter, Paul, and Ananias all speak of baptism using the very language of the reality it points to. None of them mean the water works alone; all of them tie it directly to faith. This kind of sign — one God has genuinely joined to a spiritual reality, so that through faith God truly communicates the reality it signifies — is what the Bible and the church call a sacrament.",
+    leadingQ:"We've seen this pattern over and over. What does it look like when someone receives baptism this way — trusting Jesus, not just going through the motions? Is that available to absolutely everyone, or does the Bible say something more specific about who this applies to?"
+  },
+  {
+    section: "PART FIVE", sectionTitle: "Who Is This Sign For?",
+    prompt: "We've said baptism is a sacrament — a sign God has joined to a real spiritual promise. Since a sign points to and seals a promise, who does it make sense for that sign to be given to?",
+    options: [
+      { text: "Only people old enough to personally understand and declare their own faith — never children", correct:false,
+        correction:"think back to the wedding ring. Signs aren't only given to people who fully understand every implication of what they're receiving — a sign can be given in advance, pointing to a promise that a person grows into. Hold that thought; the next option builds directly on it." },
+      { text: "Only people born into a particular nation or ethnic background", correct:false,
+        correction:"nothing we've built so far has anything to do with nationality or ethnicity. The promise in view is forgiveness of sins and union with Christ — offered, as Peter says elsewhere, to \u201cas many as the Lord our God will call\u201d (Acts 2:39), not to one people group." },
+      { text: "God gives this sign both to people who personally believe, and to the children of believers — as a sign of His promise to them, sealed in advance, the same way He once gave a sign to the children of His people in the Old Testament", correct:true,
+        affirmation:"That's right." },
+      { text: "Baptism should be repeated every time someone sins, since sin happens repeatedly", correct:false,
+        correction:"think of the wedding ring again — a person doesn't get re-married every time they have an argument. The ring was given once, sealing a covenant that continues. Baptism works the same way: a sign given once, sealing a promise that continues, not a transaction repeated with every failure." }
+    ],
+    takeaway:"This is one of the most distinctive things about the classical Reformed churches: baptism is given not only to believing adults, but to the children of believers, too — as a sign of God's promise sealed to them in advance, following the same pattern God used with Abraham's children long before.",
+    leadingQ:"If the sign is given before a child can personally believe — does that mean the sign works automatically, whether or not that child ever actually comes to trust Christ?"
+  },
+  {
+    section: "PART FIVE", sectionTitle: "Who Is This Sign For?",
+    prompt: "Think back to the gift card. Two people can hold the exact same genuine sign, and only one actually receives what it offers. If that's true for baptism too — what does it mean for someone who was baptized — whether as a child of believers, or as an adult who professed faith — but never comes to genuinely, personally trust Christ?",
+    options: [
+      { text: "It means their baptism didn't count, so they should be baptized again once real faith is present", correct:false,
+        correction:"remember the ring. A real, valid sign was genuinely given — that doesn't change based on how the person later responds to it. This is true whether it's a child baptized on God's promise, or an adult baptized on a profession that later proves empty. The problem was never that the sign was fake or needs redoing; it's that the reality it pointed to was never personally received or didn't endure." },
+      { text: "It means they were never really baptized to begin with, since only genuine, persevering believers can validly receive the sign", correct:false,
+        correction:"this is exactly the mistake the last question already ruled out for children, and it applies the same way to adults. The sign's validity rests on God's promise and institution, not on the perfect accuracy of anyone's faith at the moment it was given — otherwise no one could ever be baptized with full certainty, since no human can see another person's heart." },
+      { text: "They genuinely received God's sign and promise, but not the saving reality it points to — the same way someone can hold a real gift card and never actually use it", correct:true,
+        affirmation:"That's right." },
+      { text: "It means baptism doesn't really matter after all, since it clearly doesn't guarantee anything", correct:false,
+        correction:"think of the wax seal again. The seal genuinely mattered — it's just that mattering and guaranteeing automatic results were never the same thing. God's sign and promise is real and significant precisely because it calls for a real, ongoing response, not despite it." }
+    ],
+    takeaway:"Baptism gives every person who receives it — whether a child of believers or a professing adult — a genuine sign and promise from God: real covenant membership and privileges, and real covenant responsibility. Paul makes this same point about Abraham himself: \u201cTherefore know that only those who are of faith are sons of Abraham\u201d (Galatians 3:7). Being marked as one of God's people through the sign is real and meaningful, but it isn't automatically the same as actually, personally trusting God from the heart. That's exactly why every baptized person, regardless of when or how they were baptized, is still called to genuine, living faith in Him.",
+    leadingQ:"So where does that leave someone who was baptized long ago — as a child or an adult — but has never personally trusted Christ, or has drifted from that trust? Is it too late, or does the promise sealed to them in baptism still stand, waiting to be believed?"
+  },
+  {
+    section: "PART FIVE", sectionTitle: "Who Is This Sign For?",
+    prompt: "If someone was baptized long ago — as a child or an adult — but has never personally trusted Christ, or has drifted far from Him, what does the Bible actually say about their situation right now?",
+    options: [
+      { text: "Once someone has drifted that far, the moment has passed — baptism was their one chance, and it's gone", correct:false,
+        correction:"this treats the sign as if it were the only opportunity to receive the reality, when we've established the opposite all along — the sign points to a promise, and promises can still be trusted whenever someone turns to them. Scripture never says a window has closed simply because time has passed." },
+      { text: "The Bible says now is actually the time to respond — the promise sealed in baptism still stands, waiting to be personally trusted", correct:true,
+        affirmation:"That's right." },
+      { text: "It depends on how many good deeds someone does to make up for the years of unbelief", correct:false,
+        correction:"remember the earlier question about paying a debt with good deeds — good deeds were never able to pay a debt already owed, no matter how many years pass. Returning to Christ isn't about earning back lost time through effort; it's the same simple response it's always been — trusting what Christ has already done." },
+      { text: "Only people who were baptized as adults can return to genuine faith; those baptized as infants missed their real chance", correct:false,
+        correction:"nothing in Scripture ties the possibility of coming to faith to which way someone was baptized. The promise sealed in infant baptism is the same promise offered to anyone — received the same way, by the same faith, at whatever point someone actually turns to Christ." }
+    ],
+    takeaway:"The promise sealed in baptism doesn't have an expiry date. Paul writes, \u201cBehold, now is the accepted time; behold, now is the day of salvation\u201d (2 Corinthians 6:2). The writer of Hebrews puts it just as directly: \u201cToday, if you will hear His voice, do not harden your hearts\u201d (Hebrews 3:15). Whether someone was baptized decades ago or last year, as an infant or an adult, the invitation stands exactly the same: turn from sin, trust in Christ, and the promise that was sealed to you becomes something you actually possess — not because the water does anything new, but because the God who made the promise is still keeping it.",
+    leadingQ:"That's the whole of what baptism points to: not water, but the God who keeps His promises — still true, still standing, still worth trusting today."
+  }
+];
+
+let screen = 'landing'; // landing | question | takeaway | end
+let qIdx = 0;
+let chosenWrong = {}; // qIdx -> array of option indices chosen wrong, in order
+let answeredCorrect = {}; // qIdx -> bool
+
+function renderThread(){
+  const thread = document.getElementById('thread');
+  const subtitle = document.getElementById('subtitle');
+  if(screen === 'landing'){ thread.style.display='none'; subtitle.style.display='none'; return; }
+  thread.style.display='flex';
+  subtitle.style.display='block';
+  thread.innerHTML = '';
+  QUESTIONS.forEach((q,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className='node-wrap';
+    const node = document.createElement('div');
+    node.className='node';
+    if(i < qIdx || (i===qIdx && screen==='takeaway')) node.classList.add('done');
+    if(i === qIdx && screen==='question') node.classList.add('current');
+    wrap.appendChild(node);
+    if(i < QUESTIONS.length-1){
+      const link = document.createElement('div');
+      link.className='link';
+      if(i < qIdx) link.classList.add('done');
+      wrap.appendChild(link);
+    }
+    thread.appendChild(wrap);
+  });
+}
+
+function render(){
+  renderThread();
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  if(screen === 'landing'){
+    const card = document.createElement('div');
+    card.className = 'card landing-card';
+    card.innerHTML = `
+      <p class="landing-body">Baptism is one of those words most people have heard, but few people can explain simply.</p>
+      <p class="landing-body">Before we get there, we'll start with something familiar—nothing theological yet.</p>
+    `;
+    const btn = document.createElement('button');
+    btn.className='continue-btn';
+    btn.textContent="Let's Begin →";
+    btn.onclick = () => { screen='question'; render(); };
+    card.appendChild(btn);
+    app.appendChild(card);
+    return;
+  }
+
+  if(screen === 'end'){
+    app.innerHTML = `
+      <div class="card done-screen">
+        <div class="mark">✓</div>
+        <div class="section-title" style="font-size:19px;">Complete</div>
+        <p style="font-size:16px; line-height:1.6; color:#4b3d28;">You've walked through signs, why we need saving, union with Christ, and what baptism seals — for children of believers and adults alike. The promise it points to still stands, today, for anyone who will trust it.</p>
+      </div>
+      <div class="card" style="margin-top:18px; text-align:left;">
+        <div class="section-title" style="font-size:19px; margin-bottom:14px;">What Now?</div>
+        <p style="font-size:16px; line-height:1.65; color:#4b3d28; margin-bottom:20px;">Wherever you're at with this — whether you're preparing for profession of faith, still working out what Reformed teaching on baptism actually means, or just wanted to see these things laid out clearly again — here are three honest next steps.</p>
+        <p style="font-size:16px; line-height:1.65; color:#4b3d28; margin-bottom:6px;"><strong>1. Talk to your minister (pastor) or an elder.</strong></p>
+        <p style="font-size:16px; line-height:1.65; color:#4b3d28; margin-bottom:20px;">These big questions aren't meant to be figured out alone. If you're contemplating professing your faith, or you have questions this raised that weren't answered, your minister or an elder would genuinely want to talk it through with you. That conversation is exactly what they're there for.</p>
+        <p style="font-size:16px; line-height:1.65; color:#4b3d28; margin-bottom:6px;"><strong>2. Read one of the Gospels — Mark is a good place to start.</strong></p>
+        <p style="font-size:16px; line-height:1.65; color:#4b3d28; margin-bottom:20px;">Everything in this study points back to Christ Himself. If you haven't read His own words and actions in Scripture recently — or ever — Mark's Gospel is short, direct, and written to be read in one sitting.</p>
+        <p style="font-size:16px; line-height:1.65; color:#4b3d28; margin-bottom:6px;"><strong>3. Bring this to prayer, and to the people around you.</strong></p>
+        <p style="font-size:16px; line-height:1.65; color:#4b3d28; margin-bottom:0;">Whether you're reinforcing something you've believed for years or encountering it for the first time, don't sit with it alone. Talk to your parents, your pastor, or a trusted believer — and ask God, honestly, to make this real to you.</p>
+        <p style="font-size:14.5px; line-height:1.6; color:#8C6530; font-style:italic; margin-top:20px; margin-bottom:0; border-top:1px solid rgba(37,29,19,0.15); padding-top:16px;">You've thought this through carefully. That's worth something. Keep going.</p>
+      </div>
+      <p class="next-note">CRCC Studies — Learning Baptism</p>
+    `;
+    return;
+  }
+
+  const q = QUESTIONS[qIdx];
+
+  const label = document.createElement('div');
+  label.className='section-label';
+  label.textContent = q.section;
+  app.appendChild(label);
+
+  const title = document.createElement('div');
+  title.className='section-title';
+  title.textContent = q.sectionTitle;
+  app.appendChild(title);
+
+  if(screen === 'takeaway'){
+    const card = document.createElement('div');
+    card.className='card takeaway-card';
+    card.innerHTML = `
+      <span class="takeaway-label">What this shows</span>
+      <p class="takeaway-text">${q.takeaway}</p>
+      <p class="leading-q">${q.leadingQ}</p>
+    `;
+    const btn = document.createElement('button');
+    btn.className='continue-btn';
+    const isLast = qIdx === QUESTIONS.length-1;
+    btn.textContent = isLast ? 'Finish for now →' : 'Continue →';
+    btn.onclick = () => {
+      if(isLast){ screen='end'; }
+      else { qIdx++; screen='question'; }
+      render();
+    };
+    card.appendChild(btn);
+    app.appendChild(card);
+    return;
+  }
+
+  // screen === 'question'
+  const card = document.createElement('div');
+  card.className='card';
+  let html = `<div class="qnum">QUESTION ${qIdx+1} OF ${QUESTIONS.length}</div>`;
+  html += `<p class="prompt">${q.prompt}</p>`;
+  html += `<div class="options" id="opts"></div>`;
+  card.innerHTML = html;
+  app.appendChild(card);
+
+  const optsWrap = card.querySelector('#opts');
+  const letters = ['A','B','C','D'];
+  const wrongChosen = chosenWrong[qIdx] || [];
+  const isCorrectDone = !!answeredCorrect[qIdx];
+
+  q.options.forEach((opt,i) => {
+    const block = document.createElement('div');
+    block.className='opt-block';
+
+    const btn = document.createElement('button');
+    btn.className='opt';
+    btn.innerHTML = `<span class="letter">${letters[i]}</span>${opt.text}`;
+
+    const wasWrongChosen = wrongChosen.includes(i);
+    const isTheCorrectOne = opt.correct;
+
+    if(isCorrectDone){
+      if(isTheCorrectOne){ btn.classList.add('correct-chosen'); }
+      else if(wasWrongChosen){ btn.classList.add('wrong-chosen'); }
+      else { btn.classList.add('disabled-other'); }
+    } else if(wasWrongChosen){
+      btn.classList.add('wrong-chosen');
+    }
+
+    btn.disabled = isCorrectDone || wasWrongChosen;
+    btn.onclick = () => handleAnswer(i);
+    block.appendChild(btn);
+
+    if(wasWrongChosen && !opt.correct){
+      const fb = document.createElement('div');
+      fb.className='inline-correction';
+      fb.innerHTML = `Here's why that doesn't hold up: ${opt.correction}`;
+      block.appendChild(fb);
+    }
+
+    optsWrap.appendChild(block);
+  });
+
+  if(isCorrectDone){
+    const correctOpt = q.options.find(o=>o.correct);
+    const aff = document.createElement('div');
+    aff.className='affirmation';
+    aff.textContent = correctOpt.affirmation;
+    card.appendChild(aff);
+
+    const btn = document.createElement('button');
+    btn.className='continue-btn';
+    btn.textContent = 'See what this means →';
+    btn.onclick = () => { screen='takeaway'; render(); };
+    card.appendChild(btn);
+  }
+}
+
+function handleAnswer(i){
+  const q = QUESTIONS[qIdx];
+  if(q.options[i].correct){
+    answeredCorrect[qIdx] = true;
+  } else {
+    if(!chosenWrong[qIdx]) chosenWrong[qIdx] = [];
+    chosenWrong[qIdx].push(i);
+  }
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
