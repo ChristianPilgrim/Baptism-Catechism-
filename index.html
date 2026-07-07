@@ -366,7 +366,7 @@ const QUESTIONS = [
       { text: "Different — the seal just records something that already happened somewhere else, so it doesn't really need to be there", correct:false,
         correction:"we said this letter isn't recognized as valid without the seal. If it were just a record of something already finished elsewhere, missing it wouldn't matter. But it does matter here — that's exactly what makes this different from the ring." }
     ],
-    takeaway:"So a sign can work two ways: some signs (like the ring) point to something already true elsewhere. Other signs (like the seal) are the actual tool through which something real is delivered to someone — even though the sign itself has no power on its own. Keep both of these in mind. Baptism, as we'll see, works more like the second one.",
+    takeaway:"So a sign can work two ways: some signs (like the ring) point to something already true elsewhere. Other signs (like the seal) are the actual tool through which something real is delivered to someone — even though the sign itself has no power on its own. Baptism, as we'll see, is both a sign and a seal.",
     leadingQ:"If a sign can be a real tool and still have no power of its own — what happens if someone's handed that tool but never actually uses it?"
   },
   {
@@ -777,7 +777,7 @@ function handleAnswer(i){
 }
 
 // Font size control
-const FONT_STEPS = [100, 120, 140, 160, 180, 200];
+const FONT_STEPS = [87.5, 100, 112.5, 125, 137.5, 150];
 let fontStepIdx = 1;
 try{
   const saved = localStorage.getItem('learningBaptismFontStep');
