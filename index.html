@@ -326,7 +326,7 @@ h1{
 </div>
 
 <script>
-const SITE_VERSION = "2026-07-10-rework1";
+const SITE_VERSION = "2026-07-10-rework2-signseal";
 const SAVE_KEY = "learningBaptismProgress";
 
 let screen = 'landing'; // landing | question | takeaway | end
@@ -359,7 +359,7 @@ function clearProgress(){
 
 const QUESTIONS = [
   {
-    section: "PART ONE", sectionTitle: "The Wedding Ring",
+    section: "PART ONE", sectionTitle: "The Wedding Ring (a Sign)",
     prompt: "A wedding ring sits on someone's finger. Which answer best describes what the ring does?",
     options: [
       { text: "The ring is the thing that legally and actually makes the two people married", correct:false,
@@ -375,7 +375,7 @@ const QUESTIONS = [
     leadingQ:"So if a sign can be destroyed without hurting the reality it points to — what does that actually tell us about which one depends on the other?"
   },
   {
-    section: "PART ONE", sectionTitle: "The Wedding Ring",
+    section: "PART ONE", sectionTitle: "The Wedding Ring (a Sign)",
     prompt: "If that ring is completely destroyed — melted down, gone forever — what happens to the marriage itself, and what does that tell us about which one depends on the other?",
     options: [
       { text: "The marriage is destroyed too, since they were connected", correct:false,
@@ -391,7 +391,7 @@ const QUESTIONS = [
     leadingQ:"So could a real marriage exist without a wedding ring?"
   },
   {
-    section: "PART ONE", sectionTitle: "The Wedding Ring",
+    section: "PART ONE", sectionTitle: "The Wedding Ring (a Sign)",
     prompt: "Could two people really be married without a ring — say, if they said real vows in front of witnesses, but exchanged no physical ring at all?",
     options: [
       { text: "Yes — a ring specifically isn't required for a marriage to be real", correct:true,
@@ -405,7 +405,7 @@ const QUESTIONS = [
     leadingQ:"Is every sign like this — just optional decoration for something already finished? Or could there be a sign that actually does something more?"
   },
   {
-    section: "PART TWO", sectionTitle: "The Wax Seal",
+    section: "PART TWO", sectionTitle: "The Wax Seal (a Seal)",
     prompt: "A king writes an official letter and presses his ring into hot wax to seal it. Without that seal, the letter isn't recognized as valid or official by anyone who receives it. Does this seal work exactly the same way as the wedding ring, or differently?",
     options: [
       { text: "Exactly the same — the seal is just decoration, the letter would be just as official without it", correct:false,
@@ -417,7 +417,7 @@ const QUESTIONS = [
       { text: "Different — the seal just records something that already happened somewhere else, so it doesn't really need to be there", correct:false,
         correction:"we said this letter isn't recognized as valid without the seal. If it were just a record of something already finished elsewhere, missing it wouldn't matter. But it does matter here — that's exactly what makes this different from the ring." }
     ],
-    takeaway:"So a sign can work two ways: some signs (like the ring) point to something already true elsewhere. Other signs (like the seal) are the actual tool through which God confirms and communicates something real to someone — even though the sign itself has no power on its own. Baptism, as we'll see, is both a sign and a seal.",
+    takeaway:"So there are two different things a sign can be. Some signs (like the ring) simply point to something true elsewhere — call this a sign. Other signs (like the wax) are the actual tool through which God confirms and communicates something real — call this a seal. <strong>Baptism, as we'll see, is both at once — a <span style=\"color:var(--brass-deep)\">sign</span> and a <span style=\"color:var(--brass-deep)\">seal</span>.</strong>",
     leadingQ:"If a sign can be a real tool and still have no power of its own — what happens if someone's handed that tool but never actually uses it?"
   },
   {
@@ -545,7 +545,7 @@ const QUESTIONS = [
       { text: "Baptism is God's sign and seal of His covenant promise in Christ — a promise believers receive and enjoy through faith", correct:true,
         affirmation:"That's right." }
     ],
-    takeaway:"Baptism doesn't create union with Christ — the Spirit does that, through faith. But it isn't decoration either: like the wax seal, it's God's own appointed tool to signify, confirm, and seal His covenant promise. That's why Peter can call baptism something that \u201cnow saves us\u201d (1 Peter 3:21) while denying it's about \u201cthe removal of the filth of the flesh\u201d — God has joined His promise to this sign; the water itself has no power. This is why baptism is a means of grace, not a work: a work is what we do for God; a means of grace is what God does for us. It isn't the only one, either — the preached Word is another — but in both, God is the one acting; we simply receive.",
+    takeaway:"Baptism doesn't create union with Christ — the Spirit does that, through faith. But it isn't decoration either: like the wax seal, it's God's own appointed tool to signify, confirm, and seal His covenant promise. Baptism isn't merely a symbol you offer God as proof that your faith is real. Scripture calls it God's <strong>sign</strong> and <strong>seal</strong> — something God does for you, not something you do for Him. That's why Peter can call baptism something that \u201cnow saves us\u201d (1 Peter 3:21) while denying it's about \u201cthe removal of the filth of the flesh\u201d — God has joined His promise to this sign; the water itself has no power. This is why baptism is a means of grace, not a work: a work is what we do for God; a means of grace is what God does for us. It isn't the only one, either — the preached Word is another — but in both, God is the one acting; we simply receive.",
     leadingQ:"If Christ Himself appointed this sign — did He also specify exactly how it should be done, and why that matters?"
   },
   {
@@ -642,7 +642,7 @@ function renderThread(){
     wrap.className='node-wrap';
     const node = document.createElement('div');
     node.className='node';
-    if(i < qIdx || (i===qIdx && screen==='takeaway')) node.classList.add('done');
+    if(i < qIdx || (i===qIdx && (screen==='takeaway' || screen==='reflect' || screen==='reflectCompare' || screen==='end'))) node.classList.add('done');
     if(i === qIdx && screen==='question') node.classList.add('current');
     wrap.appendChild(node);
     if(i < QUESTIONS.length-1){
@@ -705,6 +705,41 @@ function render(){
     return;
   }
 
+  if(screen === 'reflect'){
+    const card = document.createElement('div');
+    card.className='card takeaway-card';
+    card.innerHTML = `
+      <span class="takeaway-label">In your own words</span>
+      <p class="takeaway-text" style="font-size:1.1rem;">There are no wrong answers here — this isn't scored. Just finish the sentence, in your own words, based on everything we've walked through:</p>
+      <p class="leading-q" style="font-style:normal; font-family:'Fraunces', serif; font-size:1.15rem; color:var(--parchment-ink);">"Baptism is ______"</p>
+      <textarea id="reflectBox" placeholder="Write your answer here..." style="width:100%; min-height:110px; margin-top:14px; padding:12px 14px; border-radius:6px; border:1px solid rgba(37,29,19,0.2); background:var(--parchment-soft); color:var(--parchment-ink); font-family:'Source Serif 4', serif; font-size:1rem; line-height:1.5; resize:vertical;"></textarea>
+    `;
+    const btn = document.createElement('button');
+    btn.className='continue-btn';
+    btn.textContent = 'See how that compares →';
+    btn.onclick = () => { screen='reflectCompare'; render(); };
+    card.appendChild(btn);
+    app.appendChild(card);
+    return;
+  }
+
+  if(screen === 'reflectCompare'){
+    const card = document.createElement('div');
+    card.className='card takeaway-card';
+    card.innerHTML = `
+      <span class="takeaway-label">Compare</span>
+      <p class="takeaway-text">Here's the short version we've built, piece by piece: baptism is God's <strong>sign</strong> and <strong>seal</strong> of His covenant promise in Christ — not a symbol you offer God to prove your faith, but something God does for you, sealing a promise you receive by faith.</p>
+      <p class="leading-q">If your own answer used the word "symbol," or described something you do to show God your faith — that's worth sitting with. It's the most common way to misunderstand this, and now you know why it falls short.</p>
+    `;
+    const btn = document.createElement('button');
+    btn.className='continue-btn';
+    btn.textContent = 'Finish for now →';
+    btn.onclick = () => { screen='end'; clearProgress(); render(); };
+    card.appendChild(btn);
+    app.appendChild(card);
+    return;
+  }
+
   if(screen === 'end'){
     app.innerHTML = `
       <div class="card done-screen">
@@ -751,9 +786,9 @@ function render(){
     const btn = document.createElement('button');
     btn.className='continue-btn';
     const isLast = qIdx === QUESTIONS.length-1;
-    btn.textContent = isLast ? 'Finish for now →' : 'Continue →';
+    btn.textContent = isLast ? 'One last thing →' : 'Continue →';
     btn.onclick = () => {
-      if(isLast){ screen='end'; clearProgress(); }
+      if(isLast){ screen='reflect'; }
       else { qIdx++; screen='question'; }
       render();
     };
